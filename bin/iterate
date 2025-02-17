@@ -1,0 +1,42 @@
+#!/bin/bash
+set -e -u -o pipefail -x
+trap "kill 0" SIGINT SIGTERM
+
+ROOT=$(dirname $(dirname $(readlink -f $0)))
+KERNEL1_DIR=$ROOT/kernel1
+TMP_DIR=/tmp
+AST_FILE=$TMP_DIR/kernel1.ast.json
+BIR_JSON_FILE=$TMP_DIR/kernel1.bir.json
+BIR_REPR_FILE=$TMP_DIR/kernel1.bir.repr
+KLR_FILE=$TMP_DIR/kernel1.klr.repr
+NKI_BIR_FILE=$KERNEL1_DIR/kernel1.bir.fixed.json
+TRN_NKI_DIR=kernel1-nki/sg00
+TRN_KLR_DIR=kernel1-klr
+cd $ROOT
+lake build
+rm -f $BIR_JSON_FILE $AST_FILE $BIR_REPR_FILE $KLR_FILE
+./bin/klr gather ./interop/test/kernel1.py kernel1 | jq . > $AST_FILE
+./bin/klr nki-to-klr --repr ./interop/test/kernel1.py kernel1 > $KLR_FILE
+./bin/klr nki-to-bir --repr ./interop/test/kernel1.py kernel1 > $BIR_REPR_FILE
+./bin/klr nki-to-bir ./interop/test/kernel1.py kernel1 | ./bin/fixup-klr-bir > $BIR_JSON_FILE
+scp $ROOT/bin/run-bir trn:bin
+scp $BIR_JSON_FILE trn:$TRN_KLR_DIR
+# scp $JSON_FILE dev:kernel1-klr
+scp $NKI_BIR_FILE trn:$TRN_NKI_DIR
+ssh trn << EOF
+printf "######################################################"
+printf "\n\n\n############ Running NKI version #############\n\n\n"
+printf "######################################################"
+pushd .
+cd $TRN_NKI_DIR
+../../bin/run-bir $(basename $NKI_BIR_FILE)
+
+printf "######################################################"
+printf "\n\n\n############ Running KLR version #############\n\n\n"
+printf "######################################################"
+popd
+cd $TRN_KLR_DIR
+pwd
+../bin/run-bir $(basename $BIR_JSON_FILE)
+../bin/run-bir $(basename $BIR_JSON_FILE)
+EOF

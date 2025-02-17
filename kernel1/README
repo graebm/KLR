@@ -1,0 +1,5 @@
+* kernel1.bir.orig.json : File dumped by running NKI on trn
+* kernel1.bir.pretty.json : cat kernel1.bir.orig.json | jq .
+* kernel1.bir.fixed.json : bin/fixup-nki-bir kernel1.bir.orig.json
+* kernel1.klr.bir.json : ./bin/klr nki-to-bir ./interop/test/kernel1.py kernel1 | jq -MS .
+* fixed.json : hand edits to 3

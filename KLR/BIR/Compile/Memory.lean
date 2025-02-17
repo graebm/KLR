@@ -38,7 +38,7 @@ def allocate (kind : TensorKind) (t : TensorName) : Compile Allocation := do
     | _, .pmem => .PSUM
     | _, .reg => .REG
   return {
-    addr_space := some .Shared  -- LNC ?
+    addr_space := none
     dtype := some t.dtype
     partition_dim := some 0
     tensor_shape := t.shape

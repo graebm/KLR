@@ -474,11 +474,11 @@ def checkUndefined (k : Kernel) : Tracer Unit := do
 def traceKernel (k : Kernel) : Tracer Core.Kernel := do
   globals k
   checkUndefined k
+  let args <- k.args.mapM term'
+  let kwargs <- k.kwargs.mapM fun (x,e) => return (x, <- term' e)
   match k.funcs.lookup k.entry with
   | none => throw s!"function {k.entry} not found"
   | some f => do
-      let args <- k.args.mapM term'
-      let kwargs <- k.kwargs.mapM fun (x,e) => return (x, <- term' e)
       let args <- bind_args f args kwargs (rename := true)
       let res <- call f args
       let inputs := Term.all_tensors (args.map fun x => x.snd)

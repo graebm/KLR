@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e -u -o pipefail
+trap "kill 0" SIGINT SIGTERM
+
+ROOT=$(dirname $(dirname $(readlink -f $0)))
+
+function usage() {
+  echo "Usage: $0 [<file>]"
+  echo "  If no file is specified, input is read from stdin."
+  exit 1
+}
+
+FILE=""
+FILTER='walk(if type == "object" then with_entries(select(.key != "debug")) else . end)'
+
+if [[ $# -gt 1 ]]; then
+  usage
+elif [[ $# -eq 1 ]]; then
+  FILE="$1"; shift
+fi
+
+
+if [ -n "$FILE" ]; then
+  if [ ! -f "$FILE" ]; then
+    echo "Error: File '$FILE' not found." >&2
+    exit 1
+  fi
+  jq -MS "$FILTER" "$FILE"
+else
+  jq -MS "$FILTER"
+fi
+
+# diff <(jq --sort-keys . bir.pretty.json) <(jq --sort-keys . /tmp/kernel1.bir.json)

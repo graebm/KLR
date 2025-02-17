@@ -9,6 +9,21 @@ import KLR.BIR.Compile.Types
 namespace KLR.BIR.Compile
 open KLR.Core
 
+def lowerTensorScalar (inst : Instruction) (ts : KLR.Core.TensorScalar) : KLR.BIR.TensorScalar :=
+ {
+    name := inst.name
+    engine := inst.engine
+    ins := inst.ins
+    outs := inst.outs
+    op0 := ts.op0
+    const0 := ts.const0
+    reverse0 := ts.reverse0
+    op1 := ts.op1
+    const1 := ts.const1
+    reverse1 := ts.reverse1
+ }
+
+
 def gatherAPs : List Expr -> Compile (List Argument)
   | [] => return []
   | x :: xs => do
@@ -25,12 +40,14 @@ def compileStore (t : TensorName) (ix : List Index) (e : Expr) : Compile Inst :=
         ins  := <- gatherAPs [.access (.tensor t) ix]
         outs := <- gatherAPs [e]
       }
-  | .call (.operator _) args [] => do
-      return .NoOp {
-        name := "noop_test"  -- I think these have to be unique (need state monad?)
-        ins  := <- gatherAPs [.access (.tensor t) ix]
-        outs := <- gatherAPs args
-      }
+  | .call (.operator op) args [] => match op with
+    | .tensorScalar ts => do
+      let inst := Instruction.mk
+        (name := "tensor_scalar")
+        (engine := Engine.unassigned)
+        (ins := <- gatherAPs [.access (.tensor t) ix])
+        (outs := <- gatherAPs args)
+      return Inst.TensorScalar (lowerTensorScalar inst ts)
   | _ => throw s!"store pattern not yet implemented {repr e}"
 
 def compileStmt : Stmt -> Compile Inst
@@ -40,8 +57,8 @@ def compileStmt : Stmt -> Compile Inst
   | .loop .. => throw "unimp loop"
 
 def compile_kernel (k : Kernel) : Compile BIR := do
-  let inputs <- k.inputs.mapM (allocate .Input)
-  let outputs <- k.outputs.mapM (allocate .Output)
+  let inputs <- k.inputs.mapM (allocate .ExternalInput)
+  let outputs <- k.outputs.mapM (allocate .ExternalOutput)
   let internal <- k.internal.mapM (allocate .Internal)
   let allocs := inputs ++ outputs ++ internal
   let insts <- compileStmt ▷ k.body

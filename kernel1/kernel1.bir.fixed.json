@@ -1,0 +1,445 @@
+{
+  "arch": "sunda",
+  "attributes": {
+    "neuron_core_id": 0
+  },
+  "functions": [
+    {
+      "allocations": [
+        {
+          "Skind": "memory_location_set",
+          "dtype": "float32",
+          "file": "",
+          "kind": "ExternalInput",
+          "memorylocations": [
+            {
+              "Skind": "memory_location",
+              "addr": 0,
+              "alias": [],
+              "allocated": false,
+              "bank": 0,
+              "base": 0,
+              "dims": [
+                10,
+                40
+              ],
+              "name": "a",
+              "pinned": false,
+              "tensor_id": 0,
+              "type": "DRAM"
+            }
+          ],
+          "name": "a_set",
+          "no_spill": false,
+          "partition_dim": 0,
+          "tensorId2MemLocSize": 1,
+          "tensor_class": "Tensor",
+          "tensor_shape": [
+            10,
+            10
+          ],
+          "virtual": false,
+          "volatile": false
+        },
+        {
+          "Skind": "memory_location_set",
+          "dtype": "float32",
+          "file": "",
+          "kind": "ExternalOutput",
+          "memorylocations": [
+            {
+              "Skind": "memory_location",
+              "addr": 0,
+              "alias": [],
+              "allocated": false,
+              "bank": 0,
+              "base": 0,
+              "dims": [
+                10,
+                40
+              ],
+              "name": "b",
+              "pinned": false,
+              "tensor_id": 0,
+              "type": "DRAM"
+            }
+          ],
+          "name": "b_set",
+          "no_spill": false,
+          "partition_dim": 0,
+          "tensorId2MemLocSize": 1,
+          "tensor_class": "Tensor",
+          "tensor_shape": [
+            10,
+            10
+          ],
+          "virtual": false,
+          "volatile": false
+        },
+        {
+          "Skind": "memory_location_set",
+          "dtype": "float32",
+          "file": "",
+          "kind": "Internal",
+          "memorylocations": [
+            {
+              "Skind": "memory_location",
+              "addr": 0,
+              "allocated": false,
+              "bank": 0,
+              "base": 0,
+              "dims": [
+                10,
+                40
+              ],
+              "name": "tile.7",
+              "pinned": false,
+              "tensor_id": 0,
+              "type": "SB"
+            }
+          ],
+          "name": "tile.7_set",
+          "no_spill": false,
+          "partition_dim": 0,
+          "tensorId2MemLocSize": 1,
+          "tensor_class": "NeuronSBTensor",
+          "tensor_shape": [
+            10,
+            10
+          ],
+          "virtual": false,
+          "volatile": false
+        },
+        {
+          "Skind": "memory_location_set",
+          "dtype": "float32",
+          "file": "",
+          "kind": "Internal",
+          "memorylocations": [
+            {
+              "Skind": "memory_location",
+              "addr": 0,
+              "allocated": false,
+              "bank": 0,
+              "base": 0,
+              "dims": [
+                10,
+                40
+              ],
+              "name": "tile.9",
+              "pinned": false,
+              "tensor_id": 0,
+              "type": "SB"
+            }
+          ],
+          "name": "tile.9_set",
+          "no_spill": false,
+          "partition_dim": 0,
+          "tensorId2MemLocSize": 1,
+          "tensor_class": "NeuronSBTensor",
+          "tensor_shape": [
+            10,
+            10
+          ],
+          "virtual": false,
+          "volatile": false
+        }
+      ],
+      "attributes": [
+        "need_dce",
+        "need_unroll"
+      ],
+      "blocks": [
+        {
+          "instructions": [
+            {
+              "can_read_uninit": false,
+              "dependencies": [],
+              "descendants": [],
+              "duplicate": false,
+              "engine": "Unassigned",
+              "ins": [
+                {
+                  "access_shape": [
+                    10,
+                    10
+                  ],
+                  "addrs": [
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    },
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    }
+                  ],
+                  "ap": [
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      1
+                    ],
+                    [
+                      1,
+                      10
+                    ]
+                  ],
+                  "dtype": "float32",
+                  "kind": "symbolic_ap",
+                  "memsetref": "a_set"
+                }
+              ],
+              "loopnest": [],
+              "name": "I-2",
+              "opcode": "Load",
+              "order": [],
+              "outs": [
+                {
+                  "access_shape": [
+                    10,
+                    10
+                  ],
+                  "addrs": [
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    },
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    }
+                  ],
+                  "ap": [
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      1
+                    ],
+                    [
+                      1,
+                      10
+                    ]
+                  ],
+                  "dtype": "float32",
+                  "kind": "symbolic_ap",
+                  "memsetref": "tile.9_set"
+                }
+              ],
+              "predicates": []
+            },
+            {
+              "can_read_uninit": false,
+              "dependencies": [],
+              "descendants": [],
+              "duplicate": false,
+              "engine": "Unassigned",
+              "ins": [
+                {
+                  "access_shape": [
+                    10,
+                    10
+                  ],
+                  "addrs": [
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    },
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    }
+                  ],
+                  "ap": [
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      1
+                    ],
+                    [
+                      1,
+                      10
+                    ]
+                  ],
+                  "dtype": "float32",
+                  "kind": "symbolic_ap",
+                  "memsetref": "tile.9_set"
+                },
+                {
+                  "dtype": "float32",
+                  "expr": {
+                    "c": 0,
+                    "kind": "AffExprKind",
+                    "terms": []
+                  },
+                  "kind": "symbolic_imm_value",
+                  "value_list": [
+                    {
+                      "value": 1.0
+                    }
+                  ]
+                }
+              ],
+              "is_scalar_tensor_tensor": false,
+              "is_tensor_scalar_addr": false,
+              "is_tensor_tensor_scan": false,
+              "loopnest": [],
+              "name": "I-4",
+              "op0": "subtract",
+              "op1": "bypass",
+              "opcode": "TensorScalarPtr",
+              "order": [],
+              "outs": [
+                {
+                  "access_shape": [
+                    10,
+                    10
+                  ],
+                  "addrs": [
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    },
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    }
+                  ],
+                  "ap": [
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      1
+                    ],
+                    [
+                      1,
+                      10
+                    ]
+                  ],
+                  "dtype": "float32",
+                  "kind": "symbolic_ap",
+                  "memsetref": "tile.7_set"
+                }
+              ],
+              "predicates": [],
+              "reverse0": false,
+              "reverse1": false
+            },
+            {
+              "can_read_uninit": false,
+              "dependencies": [],
+              "descendants": [],
+              "duplicate": false,
+              "engine": "Unassigned",
+              "ins": [
+                {
+                  "access_shape": [
+                    10,
+                    10
+                  ],
+                  "addrs": [
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    },
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    }
+                  ],
+                  "ap": [
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      1
+                    ],
+                    [
+                      1,
+                      10
+                    ]
+                  ],
+                  "dtype": "float32",
+                  "kind": "symbolic_ap",
+                  "memsetref": "tile.7_set"
+                }
+              ],
+              "loopnest": [],
+              "name": "I-6",
+              "opcode": "Save",
+              "order": [],
+              "outs": [
+                {
+                  "access_shape": [
+                    10,
+                    10
+                  ],
+                  "addrs": [
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    },
+                    {
+                      "c": 0,
+                      "kind": "AffExprKind",
+                      "terms": []
+                    }
+                  ],
+                  "ap": [
+                    [
+                      10,
+                      10
+                    ],
+                    [
+                      10,
+                      1
+                    ],
+                    [
+                      1,
+                      10
+                    ]
+                  ],
+                  "dtype": "float32",
+                  "kind": "symbolic_ap",
+                  "memsetref": "b_set"
+                }
+              ],
+              "predicates": []
+            }
+          ],
+          "name": "Block1"
+        }
+      ],
+      "name": "sg0000"
+    }
+  ],
+  "nki_functions": {
+    "functions": []
+  },
+  "version": 2
+}

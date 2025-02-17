@@ -79,20 +79,22 @@ structure MemoryLocation where
   allocated : Option Bool := some false
   pinned : Bool := false
   tensor_id : Option Nat := some 0
+  alias : List Nat := []
   deriving BEq, Repr, Lean.FromJson, Lean.ToJson
 
 structure Allocation where
   Skind : StorageKind := .memory_location_set
   addr_space : Option AddrSpace
   dtype : Option Dtype
+  file : String := "" -- This is required. If it's not present it will crash walrus at verbose debugging levels
   partition_dim : Option Nat
   tensor_shape : List Nat
   name : String
-  --no_spill : Option Bool := none  -- should be do_not_spill?
-  --volatile : Bool := False        -- unused by walrus?
-  --virtual : Option Bool := none
+  no_spill : Bool := false
+  volatile : Bool := false
+  virtual : Bool := false
   kind : TensorKind
-  --tensor_class : Option TensorClass := none
+  tensor_class : TensorClass := match kind with | .Internal => .NeuronSBTensor | _ => .Tensor
   memorylocations : List MemoryLocation
   tensorId2MemLocSize : Nat := memorylocations.length
   deriving BEq, Repr, Lean.FromJson, Lean.ToJson
@@ -188,13 +190,14 @@ instance : Lean.FromJson InstLoop where fromJson? := InstLoop.fromJson?
 instance : Lean.FromJson Block where fromJson? := Block.fromJson?
 instance : Lean.FromJson Loop where fromJson? := Loop.fromJson?
 
-structure FunAttributes where
-  need_unroll : Option Bool := some true
+inductive FunAttributes where
+| need_dce
+| need_unroll
   deriving BEq, Repr, Lean.FromJson, Lean.ToJson
 
 structure Function where
   name : String
-  attributes : FunAttributes := { }
+  attributes : List FunAttributes := [] -- [.need_dce, .need_unroll]
   allocations : List Allocation
   blocks : List Block
   deriving BEq, Repr, Lean.FromJson, Lean.ToJson
@@ -206,6 +209,6 @@ structure Attributes where
 structure BIR where
   attributes : Attributes := { }
   functions: List Function
-  arch : String := "gen3"
+  arch : String := "sunda" -- Found in dump of NKI baremetal bir.json
   version : Nat := 2
   deriving BEq, Repr, Lean.FromJson, Lean.ToJson
