@@ -16,7 +16,7 @@ struct block {
 #define LARGE_SIZE 7168
 
 static_assert(BLOCK_SIZE >= LARGE_SIZE,
-             "BLOCK_SIZE must hold anything LARGE_SIZE or less");
+              "BLOCK_SIZE must hold anything LARGE_SIZE or less");
 
 struct region {
   struct block *blocks;

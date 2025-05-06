@@ -3,8 +3,8 @@ Copyright (c) 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Paul Govereau, Sean McLaughlin
 */
-#include "frontend.h"
 #include "ast_python.h"
+#include "frontend.h"
 
 /*
 Many of the things in peg_parser are also in libpython, some private, some
@@ -14,23 +14,24 @@ this file. This ensures our version of the PEG parser will not get confused
 with the version in the user's libpython.
 */
 
-#include "peg_parser/compat.c"
-#include "peg_parser/token.c"
+#include "peg_parser/action_helpers.c"
 #include "peg_parser/ast_python.c"
-#include "peg_parser/tokenizer.c"
+#include "peg_parser/compat.c"
+#include "peg_parser/parser.c"
 #include "peg_parser/pegen.c"
 #include "peg_parser/string_parser.c"
-#include "peg_parser/action_helpers.c"
-#include "peg_parser/parser.c"
+#include "peg_parser/token.c"
+#include "peg_parser/tokenizer.c"
 
 // -- Public interface to our version of the PEG parser
 
-struct _mod* parse_string(const char *str, PyObject* filename) {
+struct _mod *parse_string(const char *str, PyObject *filename) {
   PyArena *arena = _PyArena_New();
   if (!arena)
     return NULL;
 
-  struct _mod *result = _PyPegen_run_parser_from_string(str, Py_single_input, filename, NULL, arena);
+  struct _mod *result = _PyPegen_run_parser_from_string(str, Py_single_input,
+                                                        filename, NULL, arena);
   if (result)
     result->arena = arena;
   else

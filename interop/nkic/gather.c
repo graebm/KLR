@@ -2,16 +2,16 @@
 Copyright (c) 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 */
-#include "frontend.h"
 #include "ast_python.h"
 #include "ast_python_core.h"
+#include "frontend.h"
 // TODO: only for testing
 #include "ast_nki.h"
 
 // Note: modern Pythons have PyImport_GetModuleByDef, but we need to be
 // compatible with 3.9
 
-static PyObject* get_util(const char *name) {
+static PyObject *get_util(const char *name) {
   PyObject *m = NULL, *attr = NULL, *f = NULL;
   PyObject *fe = PyUnicode_FromString("frontend");
   if (fe) {
@@ -28,7 +28,7 @@ static PyObject* get_util(const char *name) {
   return f;
 }
 
-static struct _mod* parse_function(PyObject *f) {
+static struct _mod *parse_function(PyObject *f) {
   struct _mod *m = NULL; // needed for done label
 
   PyObject *getsrc = get_util("_get_src");
@@ -52,11 +52,10 @@ static struct _mod* parse_function(PyObject *f) {
 
   PyObject *file = PyTuple_GetItem(source, 0);
   PyObject *line = PyTuple_GetItem(source, 1);
-  PyObject *src  = PyTuple_GetItem(source, 2);
+  PyObject *src = PyTuple_GetItem(source, 2);
 
-  if (!file || !PyUnicode_Check(file) ||
-      !line || !PyLong_Check(line) ||
-      !src  || !PyUnicode_Check(src))
+  if (!file || !PyUnicode_Check(file) || !line || !PyLong_Check(line) || !src ||
+      !PyUnicode_Check(src))
     goto done;
 
   long lineno = PyLong_AsLong(line);

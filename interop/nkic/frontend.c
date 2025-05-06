@@ -43,16 +43,18 @@ static int kernel_init(struct kernel *self, PyObject *args, PyObject *kwds) {
 
 // Custom deallocator for Kernel type
 static void kernel_dealloc(struct kernel *self) {
-  if (!self) return;
+  if (!self)
+    return;
   Py_XDECREF(self->f); // NULL is OK
   if (self->region)
     region_destroy(self->region);
-  Py_TYPE(self)->tp_free((PyObject *) self);
+  Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 // frontend.Kernel.specialize
 // Provide arguments for kernel specialization
-static PyObject* kernel_specialize(struct kernel *self, PyObject *args, PyObject *kws) {
+static PyObject *kernel_specialize(struct kernel *self, PyObject *args,
+                                   PyObject *kws) {
   if (!PyTuple_Check(args) || (kws && !PyDict_Check(kws))) {
     PyErr_BadArgument();
     return NULL;
@@ -62,10 +64,11 @@ static PyObject* kernel_specialize(struct kernel *self, PyObject *args, PyObject
 }
 
 // frontend.Kernel.serialize
-static PyObject* kernel_serialize(struct kernel *self, PyObject *args) {
+static PyObject *kernel_serialize(struct kernel *self, PyObject *args) {
   (void)args;
   if (!self->specialized) {
-    PyErr_SetString(PyExc_RuntimeError, "specialize must be called before serialize");
+    PyErr_SetString(PyExc_RuntimeError,
+                    "specialize must be called before serialize");
     return NULL;
   }
   return PyByteArray_FromStringAndSize("unimp", 5);
@@ -73,14 +76,14 @@ static PyObject* kernel_serialize(struct kernel *self, PyObject *args) {
 
 // frontend.version
 // Return the current frontend version (place holder)
-static PyObject* version(PyObject *self, PyObject *args) {
+static PyObject *version(PyObject *self, PyObject *args) {
   (void)self;
   (void)args;
   return PyLong_FromLong(KLR_VERSION);
 }
 
 // frontend.deserialize
-static PyObject* deserialize(PyObject *self, PyObject *args) {
+static PyObject *deserialize(PyObject *self, PyObject *args) {
   (void)self;
   PyObject *ba = NULL;
   if (!PyArg_ParseTuple(args, "Y", &ba)) {
@@ -88,7 +91,7 @@ static PyObject* deserialize(PyObject *self, PyObject *args) {
     return NULL;
   }
   ssize_t size = PyByteArray_Size(ba);
-  const u8* buf = (u8*)PyByteArray_AsString(ba);
+  const u8 *buf = (u8 *)PyByteArray_AsString(ba);
   (void)size;
   (void)buf;
   return Py_None;
@@ -118,30 +121,30 @@ def _bind_args(f, args, kwargs):\n\
 ";
 
 static PyMethodDef KernelMethods[] = {
-  { "specialize", (void*)kernel_specialize, METH_VARARGS|METH_KEYWORDS,
-    "Provide arguments for specializing kernel" },
-  { "serialize", (void*)kernel_serialize, METH_NOARGS,
-    "Serialize a NKI Kernel to a ByteArray" },
-  { NULL, NULL, 0, NULL }
+  {"specialize", (void *)kernel_specialize, METH_VARARGS | METH_KEYWORDS,
+   "Provide arguments for specializing kernel"},
+  {"serialize", (void *)kernel_serialize, METH_NOARGS,
+   "Serialize a NKI Kernel to a ByteArray"},
+  {NULL, NULL, 0, NULL},
 };
 
 static PyTypeObject KernelType = {
-  .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-  .tp_name = "frontend.Kernel",
+  .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "frontend.Kernel",
   .tp_doc = PyDoc_STR("NKI Kernel"),
   .tp_basicsize = sizeof(struct kernel),
   .tp_itemsize = 0,
   .tp_flags = Py_TPFLAGS_DEFAULT,
   .tp_new = PyType_GenericNew,
-  .tp_init = (initproc) kernel_init,
-  .tp_dealloc = (destructor) kernel_dealloc,
+  .tp_init = (initproc)kernel_init,
+  .tp_dealloc = (destructor)kernel_dealloc,
   .tp_methods = KernelMethods,
 };
 
 static PyMethodDef methods[] = {
   {"version", version, METH_NOARGS, "Return NKI Version"},
-  {"deserialize", deserialize, METH_VARARGS, "Deserialize a NKI kernel from a bytearray"},
-  {NULL, NULL, 0, NULL}
+  {"deserialize", deserialize, METH_VARARGS,
+   "Deserialize a NKI kernel from a bytearray"},
+  {NULL, NULL, 0, NULL},
 };
 
 static struct PyModuleDef module = {
@@ -153,7 +156,7 @@ static struct PyModuleDef module = {
   .m_slots = NULL,
   .m_traverse = NULL,
   .m_clear = NULL,
-  .m_free = NULL
+  .m_free = NULL,
 };
 
 PyMODINIT_FUNC PyInit_frontend(void) {
@@ -173,7 +176,7 @@ PyMODINIT_FUNC PyInit_frontend(void) {
   }
 
   // Add Kernel object, do not decrement reference
-  if (PyDict_SetItemString(dict, "Kernel", (PyObject*) &KernelType) < 0) {
+  if (PyDict_SetItemString(dict, "Kernel", (PyObject *)&KernelType) < 0) {
     Py_DECREF(m);
     return NULL;
   }

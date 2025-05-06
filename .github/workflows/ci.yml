@@ -176,3 +176,17 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         verbose: true
+
+  # Check code formatting
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Format C
+      run: |
+        cd interop/nkic
+        ./reformat.sh
+
+    - name: Fail if any files changed
+      run: |
+        git diff --name-only --exit-code

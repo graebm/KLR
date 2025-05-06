@@ -9,56 +9,56 @@ Authors: Paul Govereau, Sean McLaughlin
 // definitions into scope.
 
 #if __STDC__ != 1 || __STDC_VERSION__ < 201710L
-#error Compiler does not support C17
+  #error Compiler does not support C17
 #endif
 
 #if defined(__STDC_NO_ATOMICS__)
-#error Compiler does not support atomic types
+  #error Compiler does not support atomic types
 #endif
 
 // Standard definitions (free standing)
 
-#include <stddef.h>
-#include <stdarg.h>
 #include <stdalign.h>
+#include <stdarg.h>
+#include <stddef.h>
 #include <stdnoreturn.h>
 
 // Standard integer types
 
+#include <limits.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdatomic.h>
-#include <limits.h>
 
 // Standard C utilites (free standing)
 
-#include <errno.h>
 #include <assert.h>
 #include <ctype.h>
-#include <string.h>
+#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef __has_builtin
   #define __has_builtin(x) 0
 #endif
 
 #if __has_builtin(__builtin_expect)
-  #define likely(x)   (__builtin_expect((x), 1))
+  #define likely(x) (__builtin_expect((x), 1))
   #define unlikely(x) (__builtin_expect((x), 0))
 #else
-  #define likely(x)   (x)
+  #define likely(x) (x)
   #define unlikely(x) (x)
 #endif
 
-#define check_size(s,n) \
-  static_assert(sizeof(s) == n, "sizeof "#s" unexpected")
+#define check_size(s, n)                                                       \
+  static_assert(sizeof(s) == n, "sizeof " #s " unexpected")
 
-typedef int8_t  i8;
+typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
-typedef uint8_t  u8;
+typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
