@@ -83,6 +83,7 @@ static void syntax_error(const struct state *st, const char *msg) {
 }
 
 // returns true if we are having fun... if we have function `name`
+// This function NEVER raises Python exceptions.
 static bool have_fun(const struct state *st, const char *name) {
   for (struct Python_Fun_List *l = st->funs; l; l = l->next) {
     if (strcmp(l->fun->name, name) == 0)
@@ -91,6 +92,7 @@ static bool have_fun(const struct state *st, const char *name) {
   return false;
 }
 
+// This function NEVER raises Python exceptions.
 static bool have_global(const struct state *st, const char *name) {
   for (struct Python_Keyword_List *l = st->globals; l; l = l->next) {
     if (strcmp(l->keyword->id, name) == 0)
@@ -101,12 +103,11 @@ static bool have_global(const struct state *st, const char *name) {
 
 // Copy a Python string to our memory region.
 // Note: we disallow embedded NULLs (which can only show up in literals).
-// Note: zero-length strings are represented as NULL, which can also
-// indicate an error if AsUTF8AndSize set an exception.
+// If NULL is returned, a Python exception has been raised.
 static char* py_strdup(struct state *st, PyObject *obj) {
   Py_ssize_t sz = 0;
   const char *s = PyUnicode_AsUTF8AndSize(obj, &sz);
-  if (!s || sz <= 0)
+  if (!s) {
     return NULL;
 
   if (memchr(s, 0, sz)) {
@@ -118,9 +119,12 @@ static char* py_strdup(struct state *st, PyObject *obj) {
 }
 
 // Construct a path name from two strings.
+// If NULL is returned, a Python exception has been raised.
 static char* path_name(struct state *st, const char *m, const char *x) {
-  if (!m || !x)
+  if (!m || !x) {
+    PyErr_SetString(PyExc_TypeError, "Bad argument to frontend path_name()");
     return NULL;
+  }
 
   size_t m_sz = strlen(m);
   size_t x_sz = strlen(x);
@@ -134,38 +138,67 @@ static char* path_name(struct state *st, const char *m, const char *x) {
 }
 
 // Construct a path name from two Python strings (in memory region)
+// If NULL is returned, a Python exception has been raised.
 static inline char* py_path_name(struct state *st, PyObject *m, PyObject *x) {
-  if (!m || !x)
+  if (!m || !x){
+    PyErr_SetString(PyExc_TypeError, "Bad argument to frontend py_path_name()");
     return NULL;
-  return path_name(st, PyUnicode_AsUTF8(m), PyUnicode_AsUTF8(x));
+  }
+
+  const char *m_str = PyUnicode_AsUTF8(m);
+  if (!m_str)
+    return NULL;
+
+  const char *x_str = PyUnicode_AsUTF8(x);
+  if (!x_str)
+    return NULL;
+
+  return path_name(st, m_str, x_str);
 }
 
 // Construct full name of python function (in memory region)
+// If NULL is returned, a Python exception has been raised.
 static char* py_fun_name(struct state *st, PyObject *f) {
-  PyObject *module = PyObject_GetAttrString(f, "__module__");
-  PyObject *name = PyObject_GetAttrString(f, "__name__");
-  char *f_name = py_path_name(st, module, name);
+  // goto cleanup if anything goes wrong
+  PyObject *module = NULL;
+  PyObject *name = NULL;
+  const char *ret_name = NULL;
 
+  module = PyObject_GetAttrString(f, "__module__"); // New reference
+  if (!module)
+    goto cleanup;
+
+  name = PyObject_GetAttrString(f, "__name__"); // New reference
+  if (!name)
+    goto cleanup;
+
+  ret_name = py_path_name(st, module, name);
+
+cleanup:
   Py_XDECREF(module);
   Py_XDECREF(name);
-  PyErr_Clear();
   return f_name;
 }
 
 // Add a new function to the work-list (if necessary)
-// Note: we are ignoring possible errors from Python as this function
+// Note: we are clear any Python exceptions that occur, as this function
 // is allowed to fail.
 static void add_work(struct state *st, PyObject *f) {
   if (!PyFunction_Check(f))
     return;
 
   char *name = py_fun_name(st, f);
-  if (!name)
+  if (!name) {
+    PyErr_Clear();
     return;
+  }
 
   // skip nki functions (for now)
   // TODO: remove once we have our own namespace
-  if (strncmp("nki", name, 3) == 0)
+  if (strncmp("nki.", name, 4) == 0)
+    return;
+
+  if (strncmp("neuronxcc.nki.", name, 14) == 0)
     return;
 
   if (have_fun(st, name))
@@ -206,6 +239,7 @@ static struct Python_Expr_List* const_exprs(struct state *st, PyObject *obj);
                          obj->lineno, obj->end_lineno, \
                          obj->col_offset, obj->end_col_offset)
 
+// If NULL is returned, a Python exception has been raised.
 static struct Python_Expr* const_expr(struct state *st, PyObject *obj) {
   struct Python_Expr *e = region_alloc(st->region, sizeof(*e));
   e->expr = region_alloc(st->region, sizeof(*e->expr));
@@ -218,26 +252,31 @@ static struct Python_Expr* const_expr(struct state *st, PyObject *obj) {
     return e;
   }
 
-  // value may have set an exception, clear it
+  // value() failed and set an exception, clear it
   PyErr_Clear();
 
   // Check for other types of supported global values
   if (PyTuple_Check(obj)) {
     e->expr->tag = Python_Expr_tuple;
     e->expr->tuple.xs = const_exprs(st, obj);
+    if (!e->expr->tuple.xs) {
+      return NULL;
+    }
     e->expr->tuple.ctx = Python_Ctx_load;
     return e;
   }
   else if (PyList_Check(obj)) {
     e->expr->tag = Python_Expr_list;
     e->expr->list.xs = const_exprs(st, obj);
+    if (!e->expr->list.xs) {
+      return NULL;
+    }
     e->expr->list.ctx = Python_Ctx_load;
     return e;
   }
   else if (PyModule_Check(obj)) {
     const char *name = PyModule_GetName(obj);
     if (!name) {
-      PyErr_Clear();
       return NULL;
     }
     e->expr->tag = Python_Expr_name;
@@ -245,19 +284,23 @@ static struct Python_Expr* const_expr(struct state *st, PyObject *obj) {
     e->expr->name.ctx = Python_Ctx_load;
     return e;
   }
-  else
-  {
-    // TODO handle numpy tensors
-    return NULL;
-  }
+  // TODO handle numpy tensors
 
+  syntax_error(st, "unexpected type for const expr");
   return NULL;
 }
 
-// Note: in case of errors we will return an empty list (NULL)
+// Note: in case of errors we will return an empty list (NULL) and raise a Python exception
 static struct Python_Expr_List* const_exprs(struct state *st, PyObject *obj) {
-  if (!obj)
+  if (!obj) {
+    PyErr_SetString(PyExc_TypeError, "Bad argument to frontend const_exprs()");
     return NULL;
+  }
+
+  YOU ARE HERE
+  YOU WERE ADDING ERROR HANDLING TO EVERYTHING
+  THEN READ THIS COMMENT https://github.com/leanprover/KLR/blob/ab89004784baf5e9638435d85da6fb3a59932e10/interop/klr/gather.c#L189-L196
+  WHICH THREW EVERYTHING INTO QUESTION
 
   Py_ssize_t sz = PyObject_Length(obj);
   if (sz <= 0) {
